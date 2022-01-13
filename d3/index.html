@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="d3-scale-radial.js"></script>
+  <style>
+    text {
+      font-size: 13px;
+      font-family: monospace;
+    }
+  </style>
+</head>
+
+<body>
+  <script>
+    // set variables
+    var margin = {top: 10, right: 10, bottom: 20, left: 10};
+    
+    var width = 500,
+    	  height = 400;
+    //Humidity
+    var svg = d3.select("body").append("svg")
+    	.attr("width", width)
+      .attr("height", height)
+      .append("g")
+    	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    var g = svg.append("g")
+    	.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+
+    //Temperature
+    var svg1 = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    var g1 = svg1.append("g")
+    	.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+    
+    
+    //small humidity
+    var svg2 = d3.select("body").append("svg")
+    .attr("width", width*2)
+    .attr("height", height*3)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    //humidity 13
+    var g2 = svg2.append("g")
+    	.attr("transform", "translate(" + width / 3 + "," + height/1.6 + ")");
+    //humidity 14
+    var g3 = svg2.append("g")
+    	.attr("transform", "translate(" + width + "," + height/1.6 + ")");
+    //humidity 15
+    var g4 = svg2.append("g")
+    	.attr("transform", "translate(" + width*5/3 + "," + height/1.6 + ")");
+    //humidity 16
+    var g5 = svg2.append("g")
+    	.attr("transform", "translate(" + width /3 + "," + height/0.7 + ")");
+    //humidity 17
+    var g6 = svg2.append("g")
+    	.attr("transform", "translate(" + width  + "," + height/0.7 + ")");
+    //humidity 18
+    var g7 = svg2.append("g")
+    	.attr("transform", "translate(" + width*5/3 + "," + height/0.7 + ")");
+    //humidity 19
+    var g8 = svg2.append("g")
+    	.attr("transform", "translate(" + width/3 + "," + height/0.45 + ")");
+    //humidity 20
+    var g9 = svg2.append("g")
+    	.attr("transform", "translate(" + width + "," + height/0.45 + ")");
+
+
+    
+    var innerRadius = 85,
+        outerRadius = Math.min(width, height) / 2 - 10;
+    
+    var parseTime = d3.timeParse("%Y-%m-%dT%H:%M:%S");
+    //%Y-%m-%dT%H:%M:%S
+    //%d-%b-%y
+    
+    var formatMonth = d3.timeFormat("%a");
+
+    var formatHour = d3.timeFormat("%Hh");
+    
+    var fullCircle = 2 * Math.PI;
+    
+    var x = d3.scaleTime()
+        .range([0, fullCircle]);
+    
+    var y = d3.scaleRadial()
+    		.range([innerRadius, outerRadius]);
+
+    //for small humidity
+    var y1 = d3.scaleRadial()
+    		.range([innerRadius, outerRadius-45]);
+    
+    //humidity linew
+    var line = d3.lineRadial()
+    		.angle(function(d) { return x(d.Date); })
+    		.radius(function(d) { return y(d.Close); });
+
+    //temperature linew
+    var line1 = d3.lineRadial()
+    .angle(function(d) { return x(d.Date); })
+    .radius(function(d) { return y(d.Temperature); });
+
+    //presence lines
+    var line2 = d3.lineRadial()
+    		.angle(function(d) { return x(d.Date); })
+    		.radius(function(d) { return y(d.LDRstatus*5.5); });
+
+    //small humidity linew1
+    var line3_1 = d3.lineRadial()
+    .angle(function(d) { return x(d.Date); })
+    .radius(function(d) { return y1(d.Close); });
+
+    
+
+    
+    
+    d3.csv("df_LDR.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.LDRstatus = +d.LDRstatus*5.5;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      y.domain([0,15]);
+      
+      var linePlot = g.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("opacity", 0.2)
+        .attr("d", line2);
+
+      var linePlot = g1.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("opacity", 0.2)
+        .attr("d", line2);
+    });
+
+
+
+    
+    // draw humidity
+    d3.csv("DHT.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      y.domain([30,70]);
+      
+      var linePlot = g.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line);
+      
+      var yAxis = g.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y(y.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(8))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatMonth(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("in 8 days");  
+     	
+      // var lineLength = linePlot.node().getTotalLength();
+      
+      // linePlot
+      //   .attr("stroke-dasharray", lineLength + " " + lineLength)
+      //   .attr("stroke-dashoffset", lineLength)
+      //   .transition()
+      //     .duration(3000)
+      //     .ease(d3.easeLinear)
+      //     .attr("stroke-dashoffset", 0);
+      
+    });
+
+
+    
+
+
+
+
+
+
+     // draw temperature
+     d3.csv("DHT.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Temperature = +d.Temperature;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		y.domain([10,30]);
+      
+      var linePlot = g1.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#ff9640")
+        .attr("d", line1);
+      
+      var yAxis = g1.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y(y.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "°"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "°"; });
+      
+      var xAxis = g1.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(8))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatMonth(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g1.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#ff9640")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Temperature")
+      
+      var subtitle = g1.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("in 8 days");  
+     	
+      // var lineLength = linePlot.node().getTotalLength();
+      
+      // linePlot
+      //   .attr("stroke-dasharray", lineLength + " " + lineLength)
+      //   .attr("stroke-dashoffset", lineLength)
+      //   .transition()
+      //     .duration(3000)
+      //     .ease(d3.easeLinear)
+      //     .attr("stroke-dashoffset", 0);
+      
+    });
+
+
+
+    // draw small humidity 13
+    d3.csv("DHT13.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      // x.domain([parseTime('2021-11-13T00:00:00'), parseTime('2021-11-18T23:59:59')]);
+
+      y1.domain([30,70]);
+      
+      var linePlot = g2.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line3_1);
+      
+      var yAxis = g2.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y1.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y1);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y1(y1.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y1(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y1(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g2.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(13))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatHour(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g2.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g2.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("Nov.13th");  
+      
+    });
+
+
+
+      // draw small humidity 14
+      d3.csv("DHT14.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      // x.domain([parseTime('2021-11-13T00:00:00'), parseTime('2021-11-18T23:59:59')]);
+
+      y1.domain([30,70]);
+      
+      var linePlot = g3.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line3_1);
+      
+      var yAxis = g3.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y1.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y1);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y1(y1.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y1(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y1(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g3.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(13))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatHour(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g3.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g3.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("Nov.14th");  
+      
+    });
+
+
+
+    // draw small humidity 15
+    d3.csv("DHT15.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      // x.domain([parseTime('2021-11-13T00:00:00'), parseTime('2021-11-18T23:59:59')]);
+
+      y1.domain([30,70]);
+      
+      var linePlot = g4.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line3_1);
+      
+      var yAxis = g4.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y1.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y1);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y1(y1.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y1(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y1(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g4.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(13))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatHour(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g4.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g4.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("Nov.15th");  
+      
+    });
+
+
+
+
+
+    // draw small humidity 16
+    d3.csv("DHT16.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      // x.domain([parseTime('2021-11-13T00:00:00'), parseTime('2021-11-18T23:59:59')]);
+
+      y1.domain([30,70]);
+      
+      var linePlot = g5.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line3_1);
+      
+      var yAxis = g5.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y1.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y1);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y1(y1.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y1(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y1(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g5.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(13))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatHour(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g5.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g5.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("Nov.16th");  
+      
+    });
+
+
+    // draw small humidity 17
+    d3.csv("DHT17.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      // x.domain([parseTime('2021-11-13T00:00:00'), parseTime('2021-11-18T23:59:59')]);
+
+      y1.domain([30,70]);
+      
+      var linePlot = g6.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line3_1);
+      
+      var yAxis = g6.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y1.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y1);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y1(y1.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y1(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y1(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g6.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(13))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatHour(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g6.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g6.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("Nov.17th");  
+      
+    });
+
+
+    // draw small humidity 18
+    d3.csv("DHT18.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      // x.domain([parseTime('2021-11-13T00:00:00'), parseTime('2021-11-18T23:59:59')]);
+
+      y1.domain([30,70]);
+      
+      var linePlot = g7.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line3_1);
+      
+      var yAxis = g7.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y1.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y1);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y1(y1.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y1(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y1(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g7.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(13))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatHour(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g7.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g7.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("Nov.18th");  
+      
+    });
+
+
+    // draw small humidity 19
+    d3.csv("DHT19.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      // x.domain([parseTime('2021-11-13T00:00:00'), parseTime('2021-11-18T23:59:59')]);
+
+      y1.domain([30,70]);
+      
+      var linePlot = g8.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line3_1);
+      
+      var yAxis = g8.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y1.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y1);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y1(y1.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y1(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y1(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g8.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(13))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatHour(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g8.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g8.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("Nov.19th");  
+      
+    });
+
+
+  // draw small humidity 20
+  d3.csv("DHT20.csv" ,function(d) {
+      d.Date = parseTime(d.Date);
+      d.Close = d.Close;
+      return d;
+    }, function(error, data) {
+      if (error) throw error;
+      
+      x.domain(d3.extent(data, function(d) { return d.Date; }));
+  		// y.domain(d3.extent(data, function(d) { return d.Close; }));
+      // x.domain([parseTime('2021-11-13T00:00:00'), parseTime('2021-11-18T23:59:59')]);
+
+      y1.domain([30,70]);
+      
+      var linePlot = g9.append("path")
+      	.datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "#4099ff")
+        .attr("d", line3_1);
+      
+      var yAxis = g9.append("g")
+          .attr("text-anchor", "middle");
+
+      var yTick = yAxis
+        .selectAll("g")
+        .data(y1.ticks(5))
+        .enter().append("g");
+      
+      yTick.append("circle")
+          .attr("fill", "none")
+          .attr("stroke", "black")
+      	  .attr("opacity", 0.2)
+          .attr("r", y1);
+      
+      yAxis.append("circle")
+      	   .attr("fill", "none")
+           .attr("stroke", "black")
+      	   .attr("opacity", 0.2)
+           .attr("r", function() { return y1(y1.domain()[0])-15});
+      
+      var labels = yTick.append("text")
+          .attr("y", function(d) { return -y1(d); })
+          .attr("dy", "0.35em")
+          .attr("fill", "none")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 5)
+          .attr("stroke-linejoin", "round")
+          .text(function(d) { return d + "%"; });
+
+      yTick.append("text")
+        .attr("y", function(d) { return -y1(d); })
+        .attr("dy", "0.35em")
+        .text(function(d) { return d + "%"; });
+      
+      var xAxis = g9.append("g");
+  
+      var xTick = xAxis
+        .selectAll("g")
+        .data(x.ticks(13))
+        .enter().append("g")
+          .attr("text-anchor", "middle")
+          .attr("transform", function(d) {
+            return "rotate(" + ((x(d)) * 180 / Math.PI - 90) + ")translate(" + (innerRadius-15) + ",0)";
+          });
+      
+      xTick.append("line")
+        .attr("x2", -5)
+        .attr("stroke", "#000");
+
+      xTick.append("text")
+        .attr("transform", function(d) { 
+        var angle = x(d);
+        return ((angle < Math.PI / 2) || (angle > (Math.PI * 3 / 2))) ? "rotate(90)translate(0,22)" : "rotate(-90)translate(0, -15)"; })
+        .text(function(d) { 
+          return formatHour(d);
+        })
+      	.style("font-size", 10)
+      	.attr("opacity", 0.6)
+      
+      var title = g9.append("g")
+      		.attr("class", "title")
+      		.append("text")
+          .attr("stroke","#4099ff")
+      		.attr("dy", "-0.2em")
+      		.attr("text-anchor", "middle")
+      		.text("Humidity")
+      
+      var subtitle = g9.append("text")
+      		.attr("dy", "1em")
+          .attr("text-anchor", "middle")
+      		.attr("opacity", 0.6)
+      		.text("Nov.20th");  
+      
+    });
+    
+  </script>
+</body>
